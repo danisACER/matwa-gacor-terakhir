@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dungeons & Diameters - 3D Math Game Lingkaran Kelas XI</title>
+  
+  <!-- Google Fonts: Pixel Fonts (Press Start 2P & Silkscreen) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
+  
+  <!-- Three.js (r128) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- 3D WebGL Canvas Container -->
+  <div id="canvas-container"></div>
+
+  <!-- Blindness Overlay (Dynamic Dark Vignette with torchlight hole) -->
+  <div id="blindness-overlay" class="hidden"></div>
+
+  <!-- Slowness Visual Overlay -->
+  <div id="slowness-overlay" class="hidden">
+    <div class="slowness-border"></div>
+    <div class="debuff-badge-frost">❄ EFEK SLOWNESS AKTIF ❄</div>
+  </div>
+
+  <!-- Audio Toggle Button (top-left) -->
+  <div class="top-bar-controls">
+    <button id="btn-sound-toggle" class="pixel-icon-btn" title="Nyalakan/Matikan Suara">🔊</button>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- SCREEN 1: MAIN MENU                                      -->
+  <!-- ======================================================== -->
+  <div id="screen-main-menu" class="screen-overlay active">
+    <div class="menu-backdrop">
+      <div class="dungeon-box main-menu-box">
+        <div class="pixel-badge-header">⚔️ GLADIATOR MATEMATIKA 3D ⚔️</div>
+        
+        <!-- Large Centered Title -->
+        <h1 class="game-main-title">Dungeons &amp; Diameters</h1>
+        
+        <p class="game-sub-title">Materi Lingkaran SMA Kelas XI • Petualangan Gladiator 1 vs 1</p>
+        
+        <div class="menu-actions">
+          <button id="btn-menu-play" class="pixel-btn btn-primary">
+            <span class="btn-icon">▶</span> PLAY
+          </button>
+          <button id="btn-menu-how" class="pixel-btn btn-secondary">
+            <span class="btn-icon">📜</span> HOW TO PLAY
+          </button>
+          <button id="btn-menu-quit" class="pixel-btn btn-danger">
+            <span class="btn-icon">✖</span> QUIT THE GAME
+          </button>
+        </div>
+
+        <div class="menu-footer">
+          <span>Tekan tombol di atas untuk memulai petualangan matematikamu!</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- SCREEN 2: GUIDEBOOK (MATERI LINGKARAN KELAS XI)          -->
+  <!-- ======================================================== -->
+  <div id="screen-guidebook" class="screen-overlay hidden">
+    <div class="guidebook-container dungeon-box">
+      <div class="guidebook-header">
+        <div class="title-with-icon">
+          <span class="icon">📖</span>
+          <h2>BUKU PANDUAN MATERI: LINGKARAN (KELAS XI SMA)</h2>
+        </div>
+        <button id="btn-close-guidebook" class="pixel-btn-close" title="Tutup">✖</button>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <div class="guidebook-tabs">
+        <button class="guide-tab active" data-tab="unsur">1. Unsur Lingkaran</button>
+        <button class="guide-tab" data-tab="sudut">2. Sudut Pusat &amp; Keliling</button>
+        <button class="guide-tab" data-tab="segi4">3. Segi Empat Tali Busur</button>
+        <button class="guide-tab" data-tab="busur-juring">4. Panjang Busur &amp; Juring</button>
+        <button class="guide-tab" data-tab="garis-singgung">5. Garis Singgung</button>
+      </div>
+
+      <!-- Tab Content Area -->
+      <div class="guidebook-body">
+        
+        <!-- TAB 1: Unsur Lingkaran -->
+        <div id="tab-content-unsur" class="tab-pane active">
+          <div class="pane-grid">
+            <div class="pane-text">
+              <h3>🔵 1. Unsur-Unsur Lingkaran</h3>
+              <p>Lingkaran adalah himpunan titik-titik pada bidang datar yang berjarak sama dari suatu titik tertentu yang disebut <strong>titik pusat</strong>.</p>
+              <ul class="guide-list">
+                <li><strong>Titik Pusat (O):</strong> Titik tengah lingkaran.</li>
+                <li><strong>Jari-jari (r):</strong> Jarak dari titik pusat ke tepi lingkaran. $d = 2r$.</li>
+                <li><strong>Diameter (d):</strong> Garis lurus yang menghubungkan dua titik pada lingkaran dan melalui titik pusat.</li>
+                <li><strong>Busur Lingkaran:</strong> Garis lengkung pada tepi lingkaran.</li>
+                <li><strong>Tali Busur:</strong> Garis lurus yang menghubungkan dua titik pada lingkaran tanpa harus lewat pusat.</li>
+                <li><strong>Apotema:</strong> Jarak terpendek (tegak lurus) dari titik pusat ke tali busur.</li>
+                <li><strong>Juring:</strong> Daerah di dalam lingkaran yang dibatasi dua jari-jari dan satu busur.</li>
+                <li><strong>Tembereng:</strong> Daerah di dalam lingkaran yang dibatasi oleh tali busur dan busurnya.</li>
+              </ul>
+            </div>
+            <div class="pane-visual">
+              <div class="canvas-label">DIAGRAM INTERAKTIF UNSUR LINGKARAN:</div>
+              <canvas id="canvas-diag-unsur" width="340" height="280"></canvas>
+              <div class="canvas-hint">💡 Arahkan kursor atau perhatikan warna legenda untuk memahami setiap unsur.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 2: Sudut Pusat & Sudut Keliling -->
+        <div id="tab-content-sudut" class="tab-pane hidden">
+          <div class="pane-grid">
+            <div class="pane-text">
+              <h3>📐 2. Sudut Pusat &amp; Sudut Keliling</h3>
+              <p>Dua konsep sudut yang sangat penting dalam lingkaran:</p>
+              <div class="formula-box">
+                <div class="formula-title">RUMUS UTAMA:</div>
+                <div class="formula-math">Sudut Pusat = 2 × Sudut Keliling</div>
+                <div class="formula-desc">(Jika keduanya menghadap busur yang sama)</div>
+              </div>
+              <ul class="guide-list">
+                <li><strong>Sudut Pusat:</strong> Sudut yang titik sudutnya berada di titik pusat lingkaran (misal: $\angle AOB$).</li>
+                <li><strong>Sudut Keliling:</strong> Sudut yang titik sudutnya berada pada keliling lingkaran (misal: $\angle ACB$).</li>
+                <li><strong>Sifat 1:</strong> Sudut keliling yang menghadap <em>diameter</em> besarnya selalu <strong>90° (siku-siku)</strong>.</li>
+                <li><strong>Sifat 2:</strong> Semua sudut keliling yang menghadap <em>busur yang sama</em> besarnya adalah <strong>sama besar</strong>.</li>
+              </ul>
+            </div>
+            <div class="pane-visual">
+              <div class="canvas-label">DIAGRAM SUDUT PUSAT &amp; KELILING:</div>
+              <canvas id="canvas-diag-sudut" width="340" height="280"></canvas>
+              <div class="canvas-hint">$\angle AOB = 2 \times \angle ACB$ (Menghadap busur $AB$ yang sama)</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 3: Segi Empat Tali Busur -->
+        <div id="tab-content-segi4" class="tab-pane hidden">
+          <div class="pane-grid">
+            <div class="pane-text">
+              <h3>🔶 3. Segi Empat Tali Busur (Cyclic Quadrilateral)</h3>
+              <p>Segi empat tali busur adalah segi empat yang keempat titik sudutnya terletak tepat pada keliling lingkaran.</p>
+              <div class="formula-box">
+                <div class="formula-title">SIFAT SUDUT BERHADAPAN:</div>
+                <div class="formula-math">∠A + ∠C = 180°</div>
+                <div class="formula-math">∠B + ∠D = 180°</div>
+                <div class="formula-desc">Jumlah dua sudut yang saling berhadapan selalu 180° (bersuplemen).</div>
+              </div>
+              <ul class="guide-list">
+                <li>Jika $\angle A = 85^\circ$, maka sudut di hadapannya $\angle C = 180^\circ - 85^\circ = 95^\circ$.</li>
+                <li><strong>Teorema Ptolemy:</strong> Perkalian diagonal sama dengan jumlah perkalian sisi-sisi berseberangan: $AC \cdot BD = (AB \cdot CD) + (BC \cdot AD)$.</li>
+              </ul>
+            </div>
+            <div class="pane-visual">
+              <div class="canvas-label">DIAGRAM SEGI EMPAT TALI BUSUR:</div>
+              <canvas id="canvas-diag-segi4" width="340" height="280"></canvas>
+              <div class="canvas-hint">$\angle A + \angle C = 180^\circ$, $\angle B + \angle D = 180^\circ$</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 4: Panjang Busur & Luas Juring -->
+        <div id="tab-content-busur-juring" class="tab-pane hidden">
+          <div class="pane-grid">
+            <div class="pane-text">
+              <h3>🍕 4. Panjang Busur, Luas Juring &amp; Tembereng</h3>
+              <p>Perhitungan bagian lingkaran menggunakan perbandingan sudut pusat $\alpha$ terhadap sudut satu putaran penuh ($360^\circ$):</p>
+              <div class="formula-box">
+                <div class="formula-title">RUMUS PANJANG BUSUR (L):</div>
+                <div class="formula-math">L = (θ / 360°) × 2πr</div>
+              </div>
+              <div class="formula-box">
+                <div class="formula-title">RUMUS LUAS JURING:</div>
+                <div class="formula-math">Luas Juring = (θ / 360°) × πr²</div>
+              </div>
+              <div class="formula-box">
+                <div class="formula-title">LUAS TEMBERENG:</div>
+                <div class="formula-math">Luas Tembereng = Luas Juring - Luas Segitiga</div>
+              </div>
+            </div>
+            <div class="pane-visual">
+              <div class="canvas-label">DIAGRAM JURING &amp; TEMBERENG:</div>
+              <canvas id="canvas-diag-juring" width="340" height="280"></canvas>
+              <div class="canvas-hint">Panjang busur sebanding dengan sudut pusatnya.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 5: Garis Singgung Lingkaran -->
+        <div id="tab-content-garis-singgung" class="tab-pane hidden">
+          <div class="pane-grid">
+            <div class="pane-text">
+              <h3>📏 5. Garis Singgung Lingkaran</h3>
+              <p>Garis yang memotong lingkaran tepat di satu titik dan <strong>selalu tegak lurus ($90^\circ$)</strong> terhadap jari-jari yang melalui titik singgung tersebut.</p>
+              <div class="formula-box">
+                <div class="formula-title">1. GARIS SINGGUNG PERSEKUTUAN LUAR (GSPL):</div>
+                <div class="formula-math">d = √( p² - (R - r)² )</div>
+                <div class="formula-desc">$p$ = jarak kedua pusat, $R$ = jari-jari besar, $r$ = jari-jari kecil.</div>
+              </div>
+              <div class="formula-box">
+                <div class="formula-title">2. GARIS SINGGUNG PERSEKUTUAN DALAM (GSPD):</div>
+                <div class="formula-math">d = √( p² - (R + r)² )</div>
+                <div class="formula-desc">Perhatikan perbedaan tanda minus $(-)$ pada luar dan tambah $(+)$ pada dalam!</div>
+              </div>
+            </div>
+            <div class="pane-visual">
+              <div class="canvas-label">DIAGRAM GARIS SINGGUNG (GSPL &amp; GSPD):</div>
+              <canvas id="canvas-diag-singgung" width="340" height="280"></canvas>
+              <div class="canvas-hint">Garis singgung selalu tegak lurus dengan jari-jari lingkaran.</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Guidebook Footer Button -->
+      <div class="guidebook-footer">
+        <button id="btn-to-difficulty" class="pixel-btn btn-success">
+          LANJUT KE PILIH TINGKAT KESULITAN ➔
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- SCREEN 3: DIFFICULTY SELECTION                           -->
+  <!-- ======================================================== -->
+  <div id="screen-difficulty" class="screen-overlay hidden">
+    <div class="difficulty-container dungeon-box">
+      <div class="diff-header">
+        <h2>⚔️ PILIH TINGKAT KESULITAN DUNGEON ⚔️</h2>
+        <p>Setiap mode menghadirkan Bos Dungeon Elemen berbeda dengan aturan hukuman khusus:</p>
+      </div>
+
+      <div class="diff-cards-grid">
+        
+        <!-- CARD EASY (WATER) -->
+        <div class="diff-card card-easy" data-difficulty="easy">
+          <div class="card-badge badge-water">💧 ELEMEN AIR</div>
+          <h3 class="boss-name">HYDROS THE TIDE GOLEM</h3>
+          <div class="boss-avatar-box water-bg">
+            <span class="avatar-emoji">🌊</span>
+          </div>
+          <div class="card-rules">
+            <div class="rule-item rule-win">
+              <span class="rule-icon">✔</span>
+              <span><strong>Benar:</strong> Darah Bos -25%</span>
+            </div>
+            <div class="rule-item rule-lose">
+              <span class="rule-icon">✖</span>
+              <span><strong>Salah:</strong> Efek <em>Slowness</em> &amp; <em>Blindness</em>!</span>
+            </div>
+          </div>
+          <button class="pixel-btn btn-choose-diff btn-water" data-diff="easy">
+            PILIH EASY
+          </button>
+        </div>
+
+        <!-- CARD MEDIUM (WIND) -->
+        <div class="diff-card card-medium" data-difficulty="medium">
+          <div class="card-badge badge-wind">🌪 ELEMEN ANGIN</div>
+          <h3 class="boss-name">ZEPHYR THE GALE ARCHON</h3>
+          <div class="boss-avatar-box wind-bg">
+            <span class="avatar-emoji">🌀</span>
+          </div>
+          <div class="card-rules">
+            <div class="rule-item rule-win">
+              <span class="rule-icon">✔</span>
+              <span><strong>Benar:</strong> Darah Bos -20%</span>
+            </div>
+            <div class="rule-item rule-lose">
+              <span class="rule-icon">✖</span>
+              <span><strong>Salah:</strong> Darah Karakter -20%!</span>
+            </div>
+          </div>
+          <button class="pixel-btn btn-choose-diff btn-wind" data-diff="medium">
+            PILIH MEDIUM
+          </button>
+        </div>
+
+        <!-- CARD HARD (MAGMA) -->
+        <div class="diff-card card-hard" data-difficulty="hard">
+          <div class="card-badge badge-magma">🔥 ELEMEN MAGMA</div>
+          <h3 class="boss-name">IGNIS THE MAGMA BEHEMOTH</h3>
+          <div class="boss-avatar-box magma-bg">
+            <span class="avatar-emoji">🌋</span>
+          </div>
+          <div class="card-rules">
+            <div class="rule-item rule-win">
+              <span class="rule-icon">✔</span>
+              <span><strong>Benar:</strong> Darah Bos -15%</span>
+            </div>
+            <div class="rule-item rule-lose">
+              <span class="rule-icon">✖</span>
+              <span><strong>Salah:</strong> Slowness, Blindness, &amp; Darah -30%!</span>
+            </div>
+          </div>
+          <button class="pixel-btn btn-choose-diff btn-magma" data-diff="hard">
+            PILIH HARD
+          </button>
+        </div>
+
+      </div>
+
+      <div class="diff-footer">
+        <button id="btn-back-to-guide" class="pixel-btn btn-back">
+          ⬅ KEMBALI KE BUKU PANDUAN
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- SCREEN 4: HOW TO PLAY MODAL                              -->
+  <!-- ======================================================== -->
+  <div id="screen-how-to-play" class="screen-overlay hidden">
+    <div class="how-container dungeon-box">
+      <div class="how-header">
+        <h2>📜 PANDUAN CARA BERMAIN (HOW TO PLAY)</h2>
+        <button id="btn-close-how" class="pixel-btn-close">✖</button>
+      </div>
+      <div class="how-body">
+        
+        <div class="tutorial-card">
+          <div class="tuto-icon">🕹</div>
+          <div class="tuto-text">
+            <h4>1. Cara Menggerakkan Karakter</h4>
+            <p>Gunakan tombol <strong>[W] [A] [S] [D]</strong> atau <strong>[Tombol Panah]</strong> pada keyboard laptop untuk berjalan menjelajahi arena gladiator. Karakter ksatria blocky 3D akan mengayunkan kaki dan tangannya secara natural layaknya manusia berjalan.</p>
+          </div>
+        </div>
+
+        <div class="tutorial-card">
+          <div class="tuto-icon">🗡</div>
+          <div class="tuto-text">
+            <h4>2. Cara Menyerang Bos Dungeon</h4>
+            <p>Dekati Bos di tengah arena hingga muncul indikator jarak serang. Tekan <strong>[SPASI]</strong> atau klik tombol <strong>[⚔️ SERANG BOS!]</strong> pada layar untuk menebas bos dengan <em>Black Sword</em>. Tindakan ini akan memicu <strong>Tantangan Kuis Matematika Lingkaran</strong>!</p>
+          </div>
+        </div>
+
+        <div class="tutorial-card">
+          <div class="tuto-icon">🧠</div>
+          <div class="tuto-text">
+            <h4>3. Menjawab Pertanyaan Matematika</h4>
+            <p>Pilihlah salah satu dari 4 opsi jawaban (A, B, C, D) sebelum waktu 25 detik habis! Anda bisa mengklik tombol di layar atau menekan tombol keyboard <strong>[A] [B] [C] [D]</strong> atau <strong>[1] [2] [3] [4]</strong>.</p>
+          </div>
+        </div>
+
+        <div class="tutorial-card">
+          <div class="tuto-icon">⚠️</div>
+          <div class="tuto-text">
+            <h4>4. Konsekuensi Jawaban &amp; Animasi Bos</h4>
+            <p>Jika jawaban <strong>BENAR</strong>: Ksatria akan menebas bos dan darah bos berkurang drastis!<br>
+            Jika jawaban <strong>SALAH</strong>: Bos akan melancarkan <strong>Animasi Serangan Balasan Elemen</strong> (Gelombang Air / Badai Angin / Letusan Magma) yang menghukum karaktermu dengan damage atau debuff <em>Slowness</em> (jalan melambat drastis) dan <em>Blindness</em> (layar menggelap pekat)!</p>
+          </div>
+        </div>
+
+        <div class="tutorial-card">
+          <div class="tuto-icon">🏆</div>
+          <div class="tuto-text">
+            <h4>5. Menang &amp; Skor Tinggi</h4>
+            <p>Kalahkan Bos dengan menghabiskan darahnya hingga 0%! Jawab dengan cepat dan pertahankan kombo benar berturut-turut untuk meraih skor tertinggi di akhir permainan.</p>
+          </div>
+        </div>
+
+      </div>
+      <div class="how-footer">
+        <button id="btn-close-how-footer" class="pixel-btn btn-primary">
+          SIAP BERMAIN! MENGERTI
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- SCREEN 5: QUIT CONFIRMATION                              -->
+  <!-- ======================================================== -->
+  <div id="screen-quit" class="screen-overlay hidden">
+    <div class="quit-dialog dungeon-box">
+      <div class="quit-icon">🚪</div>
+      <h2>KELUAR DARI GAME?</h2>
+      <p>Apakah kamu yakin ingin keluar dari Dungeons &amp; Diameters?</p>
+      <div class="quit-actions">
+        <button id="btn-quit-cancel" class="pixel-btn btn-secondary">BATAL (LANJUT MAIN)</button>
+        <button id="btn-quit-confirm" class="pixel-btn btn-danger">YA, KELUAR</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- IN-GAME HUD (OVERLAY SAAT BERTARUNG)                     -->
+  <!-- ======================================================== -->
+  <div id="in-game-hud" class="hidden">
+    
+    <!-- Top Stats Bar -->
+    <div class="hud-top-bar">
+      <!-- Player Status (Left) -->
+      <div class="hud-character-card player-card">
+        <div class="card-identity">
+          <span class="hero-icon">🛡</span>
+          <span class="hero-name">KSATRIA BLACK SWORD</span>
+        </div>
+        <div class="bar-container">
+          <div id="player-hp-bar" class="fill-bar hp-fill-green" style="width: 100%;"></div>
+        </div>
+        <div class="hp-numeric">
+          <span id="player-hp-text">100 / 100 HP</span>
+        </div>
+      </div>
+
+      <!-- Center Score & Mode Info -->
+      <div class="hud-center-card">
+        <div class="current-diff-tag" id="hud-diff-tag">EASY • WATER</div>
+        <div class="score-display">
+          SKOR: <span id="hud-score-val">0</span>
+        </div>
+        <div class="combo-display">
+          KOMBO: <span id="hud-combo-val">1x</span>
+        </div>
+      </div>
+
+      <!-- Boss Status (Right) -->
+      <div class="hud-character-card boss-card">
+        <div class="card-identity">
+          <span class="boss-icon" id="hud-boss-icon">🌊</span>
+          <span class="boss-name-label" id="hud-boss-name">HYDROS THE TIDE GOLEM</span>
+        </div>
+        <div class="bar-container">
+          <div id="boss-hp-bar" class="fill-bar hp-fill-red" style="width: 100%;"></div>
+        </div>
+        <div class="hp-numeric">
+          <span id="boss-hp-text">100% HP</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Active Debuffs Indicator Bar (Center Top) -->
+    <div id="active-debuffs-bar" class="debuffs-container"></div>
+
+    <!-- Attack Boss Floating Prompt Button (Bottom Center) -->
+    <div class="hud-bottom-actions">
+      <div id="attack-distance-prompt" class="action-prompt">
+        <span class="prompt-text">DEKATI BOS UNTUK MENEBAS!</span>
+      </div>
+      <button id="btn-action-attack" class="pixel-btn btn-action-attack">
+        <span class="btn-icon">🗡</span> TEBAS BOS (SPASI)
+      </button>
+    </div>
+
+    <!-- Quick Controls Reminder (Bottom Right) -->
+    <div class="hud-controls-helper">
+      <div class="ctrl-row"><span>[W][A][S][D]</span> : Gerak</div>
+      <div class="ctrl-row"><span>[SPASI]</span> : Tebas Bos</div>
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- MODAL: MATH QUIZ (PERTANYAAN MATEMATIKA LINGKARAN)       -->
+  <!-- ======================================================== -->
+  <div id="modal-math-quiz" class="modal-overlay hidden">
+    <div class="quiz-box dungeon-box">
+      
+      <!-- Quiz Header -->
+      <div class="quiz-header">
+        <div class="quiz-badge-topic" id="quiz-topic-badge">TOPIK: UNSUR LINGKARAN</div>
+        <div class="quiz-timer-badge">
+          ⏳ SISA WAKTU: <span id="quiz-timer-num">25</span>s
+        </div>
+      </div>
+
+      <!-- Quiz Timer Bar -->
+      <div class="quiz-timer-wrapper">
+        <div id="quiz-timer-bar" class="quiz-timer-fill" style="width: 100%;"></div>
+      </div>
+
+      <!-- Question Text -->
+      <div class="quiz-question-box">
+        <p id="quiz-question-text">Garis lurus yang menghubungkan titik pusat lingkaran dengan salah satu titik pada keliling lingkaran disebut...</p>
+      </div>
+
+      <!-- 4 Multiple Choice Options -->
+      <div class="quiz-options-grid">
+        <button class="pixel-option-btn" data-opt="0">
+          <span class="opt-letter">A</span>
+          <span class="opt-content" id="opt-text-0">Pilihan A</span>
+        </button>
+        <button class="pixel-option-btn" data-opt="1">
+          <span class="opt-letter">B</span>
+          <span class="opt-content" id="opt-text-1">Pilihan B</span>
+        </button>
+        <button class="pixel-option-btn" data-opt="2">
+          <span class="opt-letter">C</span>
+          <span class="opt-content" id="opt-text-2">Pilihan C</span>
+        </button>
+        <button class="pixel-option-btn" data-opt="3">
+          <span class="opt-letter">D</span>
+          <span class="opt-content" id="opt-text-3">Pilihan D</span>
+        </button>
+      </div>
+
+      <!-- Feedback Banner (shown after answering) -->
+      <div id="quiz-feedback-banner" class="feedback-banner hidden">
+        <div class="feedback-title" id="feedback-title">JAWABAN BENAR!</div>
+        <div class="feedback-desc" id="feedback-desc">Penjelasan rumus materi...</div>
+      </div>
+
+      <div class="quiz-footer-hint">
+        <span>💡 Tips: Anda juga dapat menekan tombol keyboard [A], [B], [C], [D] atau angka [1], [2], [3], [4].</span>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- SCREEN 6: VICTORY SCREEN                                 -->
+  <!-- ======================================================== -->
+  <div id="screen-victory" class="screen-overlay hidden">
+    <div class="victory-box dungeon-box">
+      <div class="victory-trophy">🏆</div>
+      <h2 class="victory-title">BOS BERHASIL DIKALAHKAN!</h2>
+      <p class="victory-subtitle">Selamat! Anda telah menguasai konsep Geometri Lingkaran Kelas XI SMA!</p>
+
+      <div class="results-grid">
+        <div class="result-card">
+          <span class="res-label">TOTAL SKOR</span>
+          <span class="res-val val-gold" id="vic-score-val">12,500</span>
+        </div>
+        <div class="result-card">
+          <span class="res-label">AKURASI MATEMATIKA</span>
+          <span class="res-val" id="vic-accuracy-val">100%</span>
+        </div>
+        <div class="result-card">
+          <span class="res-label">KOMBO TERTINGGI</span>
+          <span class="res-val" id="vic-combo-val">5x</span>
+        </div>
+        <div class="result-card">
+          <span class="res-label">WAKTU PERTARUNGAN</span>
+          <span class="res-val" id="vic-time-val">01:45</span>
+        </div>
+      </div>
+
+      <div class="victory-actions">
+        <button id="btn-victory-main-menu" class="pixel-btn btn-primary">
+          🏠 KEMBALI KE TAMPILAN AWAL
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- SCREEN 7: GAME OVER SCREEN                               -->
+  <!-- ======================================================== -->
+  <div id="screen-game-over" class="screen-overlay hidden">
+    <div class="gameover-box dungeon-box">
+      <div class="gameover-skull">💀</div>
+      <h2 class="gameover-title">KARAKTER TERKAPAR!</h2>
+      <p class="gameover-subtitle">Bos Dungeon terlalu kuat. Jangan menyerah, pelajari kembali materi lingkaran!</p>
+
+      <div class="gameover-actions">
+        <button id="btn-retry-battle" class="pixel-btn btn-primary">
+          🔄 COBA LAGI (RETRY)
+        </button>
+        <button id="btn-gameover-guide" class="pixel-btn btn-secondary">
+          📖 BACA BUKU PANDUAN
+        </button>
+        <button id="btn-gameover-main" class="pixel-btn btn-danger">
+          🏠 MENU UTAMA
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Core Scripts -->
+  <script src="src/audio.js"></script>
+  <script src="src/mathData.js"></script>
+  <script src="src/game3d.js"></script>
+  <script src="src/main.js"></script>
+</body>
+</html>
